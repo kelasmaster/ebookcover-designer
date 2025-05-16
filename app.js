@@ -1,5 +1,11 @@
 const canvas = new fabric.Canvas('coverCanvas');
 
+// Generate random filename
+function getRandomFileName(extension = 'png') {
+  const randomNum = Math.floor(Math.random() * 9999) + 1000;
+  return `ebookcover-${randomNum}.${extension}`;
+}
+
 // Add Text
 document.getElementById('addTextBtn').addEventListener('click', () => {
   const textValue = document.getElementById('textInput').value;
@@ -53,20 +59,38 @@ document.getElementById('bgImageUpload').addEventListener('change', function(e) 
       img.set({ width: canvas.width, height: canvas.height, selectable: false });
       canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
     });
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(file);
 });
 
-// Download Cover
-document.getElementById('downloadBtn').addEventListener('click', function() {
+// Download as PNG
+document.getElementById('downloadPngBtn').addEventListener('click', function () {
   const dataURL = canvas.toDataURL({
     format: 'png',
     quality: 1
   });
   const link = document.createElement('a');
   link.href = dataURL;
-  link.download = 'ebook-cover.png';
+  link.download = getRandomFileName('png');
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+});
+
+// Download as PDF
+document.getElementById('downloadPdfBtn').addEventListener('click', async function () {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({
+    orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+    unit: 'px',
+    format: [canvas.width, canvas.height]
+  });
+
+  const dataURL = canvas.toDataURL({
+    format: 'png',
+    quality: 1
+  });
+
+  pdf.addImage(dataURL, 'PNG', 0, 0, canvas.width, canvas.height);
+  pdf.save(getRandomFileName('pdf'));
 });
